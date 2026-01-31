@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from .database import get_db
-from .models import User, UserCreate, UserUpdate, UserResponse
+from .models import User, UserCreate, UserUpdate, UserResponse, hash_password
 from typing import List
 
 router = APIRouter(prefix="/users", tags=["users"])
@@ -16,8 +16,9 @@ async def create_user(user: UserCreate, db: AsyncSession = Depends(get_db)):
     if result.scalar_one_or_none():
         raise HTTPException(status_code=400, detail="Email already registered")
     
-    # Create new user
-    db_user = User(name=user.name, email=user.email)
+    # Create new user with hashed password
+    hashed_password = hash_password(user.password)
+    db_user = User(name=user.name, email=user.email, password=hashed_password)
     db.add(db_user)
     await db.flush()
     await db.refresh(db_user)
@@ -64,6 +65,9 @@ async def update_user(user_id: int, user_update: UserUpdate, db: AsyncSession = 
         )
         if email_check.scalar_one_or_none():
             raise HTTPException(status_code=400, detail="Email already in use")
+    if user_update.password is not None:
+        # Hash the new password
+        user.password = hash_password(user_update.password)
         user.email = user_update.email
     
     await db.flush()
