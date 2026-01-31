@@ -15,6 +15,11 @@ import sys
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from web.database import Base
 
+# Dynamically import all models from __all__ to register them with Base.metadata
+from web import models
+for model_name in models.__all__:
+    globals()[model_name] = getattr(models, model_name)
+
 # Alembic Config object
 config = context.config
 

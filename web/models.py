@@ -7,6 +7,16 @@ import bcrypt
 import enum as python_enum
 
 
+# Export all models for alembic auto-discovery
+__all__ = [
+    'User',
+    'PersonalInformation',
+    'DiscipleInformation',
+    'Devotion',
+    'Training',
+]
+
+
 # Password hashing utilities
 def hash_password(password: str) -> str:
     """Hash a password using bcrypt"""
