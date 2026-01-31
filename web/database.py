@@ -5,7 +5,7 @@ import os
 from dotenv import load_dotenv
 
 # Load environment variables from parent directory
-load_dotenv('../secrets.env')
+load_dotenv('../.env')
 
 # Database configuration from environment variables
 DATABASE_USER = os.getenv("DATABASE_USER")
@@ -15,7 +15,7 @@ DATABASE_NAME = os.getenv("DATABASE_NAME")
 
 # Validate required environment variables
 if not all([DATABASE_USER, DATABASE_PASSWORD, DATABASE_HOST, DATABASE_NAME]):
-    raise ValueError("Missing required database environment variables in secrets.env")
+    raise ValueError("Missing required database environment variables in .env")
 
 # Create async database URL
 DATABASE_URL = f"postgresql+asyncpg://{DATABASE_USER}:{DATABASE_PASSWORD}@{DATABASE_HOST}/{DATABASE_NAME}"

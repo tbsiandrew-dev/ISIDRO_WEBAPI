@@ -1,9 +1,9 @@
 from fastapi import FastAPI, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import text
-from database import get_db, engine, Base
+from web.database import get_db, engine, Base
 from contextlib import asynccontextmanager
-from routes import router as user_router
+from web.routes import router as user_router
 
 # Lifespan context manager for startup/shutdown events
 @asynccontextmanager
