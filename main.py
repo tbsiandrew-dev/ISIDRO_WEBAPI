@@ -4,6 +4,11 @@ from sqlalchemy import text
 from web.database import get_db, engine, Base
 from contextlib import asynccontextmanager
 from web.routes import router as user_router
+from web.api.auth import router as auth_router
+from web.api.personal_info import router as personal_info_router
+from web.api.disciple import router as disciple_router
+from web.api.devotion import router as devotion_router
+from web.api.training import router as training_router
 
 # Lifespan context manager for startup/shutdown events
 @asynccontextmanager
@@ -25,6 +30,11 @@ app = FastAPI(
 
 # Include routers
 app.include_router(user_router)
+app.include_router(auth_router)
+app.include_router(personal_info_router)
+app.include_router(disciple_router)
+app.include_router(devotion_router)
+app.include_router(training_router)
 
 # Root endpoint
 @app.get("/")
