@@ -9,6 +9,7 @@ from web.api.personal_info import router as personal_info_router
 from web.api.disciple import router as disciple_router
 from web.api.devotion import router as devotion_router
 from web.api.training import router as training_router
+from fastapi.middleware.cors import CORSMiddleware
 
 # Lifespan context manager for startup/shutdown events
 @asynccontextmanager
@@ -26,6 +27,15 @@ app = FastAPI(
     description="FastAPI application with PostgreSQL 17 database",
     version="1.0.0",
     lifespan=lifespan
+)
+
+# Enable CORS for all origins
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Allow all origins
+    allow_credentials=True,
+    allow_methods=["*"],  # Allow all methods (GET, POST, PUT, DELETE, etc.)
+    allow_headers=["*"],  # Allow all headers
 )
 
 # Include routers
