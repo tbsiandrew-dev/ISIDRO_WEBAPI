@@ -5,7 +5,7 @@ import os
 from dotenv import load_dotenv
 
 # Load environment variables from parent directory
-load_dotenv('../.env')
+load_dotenv('.env')
 
 # Database configuration from environment variables
 DATABASE_USER = os.getenv("DATABASE_USER")
