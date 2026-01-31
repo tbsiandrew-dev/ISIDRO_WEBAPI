@@ -1,18 +1,34 @@
 # ISIDRO Web API
 
-FastAPI application with PostgreSQL 17 database connectivity.
+FastAPI application with PostgreSQL 17 database connectivity using Neon.
 
 ## Setup
 
-1. Install dependencies:
+1. Create and activate virtual environment:
+```bash
+cd web
+python -m venv venv
+.\venv\Scripts\Activate.ps1  # On Windows PowerShell
+# or
+source venv/bin/activate  # On macOS/Linux
+```
+
+2. Install dependencies:
 ```bash
 pip install -r requirements.txt
 ```
 
-2. Ensure your `secrets.env` file contains the PostgreSQL connection string.
+3. Ensure your `secrets.env` file exists in the root directory with database credentials:
+```
+DATABASE_USER=your_user
+DATABASE_PASSWORD=your_password
+DATABASE_HOST=your_host
+DATABASE_NAME=your_database
+```
 
-3. Run the application:
+4. Run the application from the root directory:
 ```bash
+cd ..
 python main.py
 ```
 
@@ -45,13 +61,17 @@ Once running, visit:
 
 ```
 ISIDRO_WEBAPI/
-├── main.py          # FastAPI application entry point
-├── database.py      # Database configuration and connection
-├── models.py        # SQLAlchemy models and Pydantic schemas
-├── routes.py        # API route handlers
-├── requirements.txt # Python dependencies
-├── secrets.env      # Database credentials
-└── README.md        # This file
+├── main.py              # FastAPI application entry point
+├── secrets.env          # Database credentials (root level)
+├── .gitignore           # Git ignore rules
+├── README.md            # This file
+└── web/
+    ├── database.py      # Database configuration and connection
+    ├── models.py        # SQLAlchemy models and Pydantic schemas
+    ├── routes.py        # API route handlers
+    ├── requirements.txt # Python dependencies
+    ├── venv/            # Virtual environment
+    └── README.md        # Web app documentation
 ```
 
 ## Example Usage
