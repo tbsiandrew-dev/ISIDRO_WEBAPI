@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from .database import get_db
+from .dependencies import get_current_user
 from .models import User, UserCreate, UserUpdate, UserResponse, hash_password
 from typing import List
 
@@ -35,8 +36,15 @@ async def get_users(skip: int = 0, limit: int = 100, db: AsyncSession = Depends(
 
 
 @router.get("/{user_id}", response_model=UserResponse)
-async def get_user(user_id: int, db: AsyncSession = Depends(get_db)):
-    """Get a specific user by ID"""
+async def get_user(
+    user_id: int,
+    db: AsyncSession = Depends(get_db),
+    current_user_id: int = Depends(get_current_user)
+):
+    """Get a specific user by ID (requires JWT token)"""
+    if user_id != current_user_id:
+        raise HTTPException(status_code=403, detail="You can only access your own profile")
+    
     result = await db.execute(select(User).where(User.id == user_id))
     user = result.scalar_one_or_none()
     
@@ -47,8 +55,16 @@ async def get_user(user_id: int, db: AsyncSession = Depends(get_db)):
 
 
 @router.put("/{user_id}", response_model=UserResponse)
-async def update_user(user_id: int, user_update: UserUpdate, db: AsyncSession = Depends(get_db)):
-    """Update a user"""
+async def update_user(
+    user_id: int,
+    user_update: UserUpdate,
+    db: AsyncSession = Depends(get_db),
+    current_user_id: int = Depends(get_current_user)
+):
+    """Update a user (requires JWT token)"""
+    if user_id != current_user_id:
+        raise HTTPException(status_code=403, detail="You can only update your own profile")
+    
     result = await db.execute(select(User).where(User.id == user_id))
     user = result.scalar_one_or_none()
     
@@ -65,10 +81,10 @@ async def update_user(user_id: int, user_update: UserUpdate, db: AsyncSession = 
         )
         if email_check.scalar_one_or_none():
             raise HTTPException(status_code=400, detail="Email already in use")
+        user.email = user_update.email
     if user_update.password is not None:
         # Hash the new password
         user.password = hash_password(user_update.password)
-        user.email = user_update.email
     
     await db.flush()
     await db.refresh(user)
@@ -77,8 +93,15 @@ async def update_user(user_id: int, user_update: UserUpdate, db: AsyncSession = 
 
 
 @router.delete("/{user_id}", status_code=204)
-async def delete_user(user_id: int, db: AsyncSession = Depends(get_db)):
-    """Delete a user"""
+async def delete_user(
+    user_id: int,
+    db: AsyncSession = Depends(get_db),
+    current_user_id: int = Depends(get_current_user)
+):
+    """Delete a user (requires JWT token)"""
+    if user_id != current_user_id:
+        raise HTTPException(status_code=403, detail="You can only delete your own profile")
+    
     result = await db.execute(select(User).where(User.id == user_id))
     user = result.scalar_one_or_none()
     

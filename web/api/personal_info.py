@@ -3,14 +3,23 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from ..database import get_db
+from ..dependencies import get_current_user
 from ..models import PersonalInformation, PersonalInformationCreate, PersonalInformationUpdate, PersonalInformationResponse
 
 router = APIRouter(prefix="/api/personal-info", tags=["personal-information"])
 
 
 @router.post("/{user_id}", response_model=PersonalInformationResponse, status_code=201)
-async def create_personal_info(user_id: int, info: PersonalInformationCreate, db: AsyncSession = Depends(get_db)):
-    """Create personal information for a user"""
+async def create_personal_info(
+    user_id: int,
+    info: PersonalInformationCreate,
+    db: AsyncSession = Depends(get_db),
+    current_user_id: int = Depends(get_current_user)
+):
+    """Create personal information for a user (requires JWT token)"""
+    if user_id != current_user_id:
+        raise HTTPException(status_code=403, detail="You can only access your own information")
+    
     # Check if user exists
     from ..models import User
     result = await db.execute(select(User).where(User.id == user_id))
@@ -25,8 +34,15 @@ async def create_personal_info(user_id: int, info: PersonalInformationCreate, db
 
 
 @router.get("/{user_id}", response_model=PersonalInformationResponse)
-async def get_personal_info(user_id: int, db: AsyncSession = Depends(get_db)):
-    """Get personal information for a user"""
+async def get_personal_info(
+    user_id: int,
+    db: AsyncSession = Depends(get_db),
+    current_user_id: int = Depends(get_current_user)
+):
+    """Get personal information for a user (requires JWT token)"""
+    if user_id != current_user_id:
+        raise HTTPException(status_code=403, detail="You can only access your own information")
+    
     result = await db.execute(select(PersonalInformation).where(PersonalInformation.user_id == user_id))
     info = result.scalar_one_or_none()
     
@@ -37,8 +53,16 @@ async def get_personal_info(user_id: int, db: AsyncSession = Depends(get_db)):
 
 
 @router.put("/{user_id}", response_model=PersonalInformationResponse)
-async def update_personal_info(user_id: int, info_update: PersonalInformationUpdate, db: AsyncSession = Depends(get_db)):
-    """Update personal information for a user"""
+async def update_personal_info(
+    user_id: int,
+    info_update: PersonalInformationUpdate,
+    db: AsyncSession = Depends(get_db),
+    current_user_id: int = Depends(get_current_user)
+):
+    """Update personal information for a user (requires JWT token)"""
+    if user_id != current_user_id:
+        raise HTTPException(status_code=403, detail="You can only update your own information")
+    
     result = await db.execute(select(PersonalInformation).where(PersonalInformation.user_id == user_id))
     info = result.scalar_one_or_none()
     
@@ -55,8 +79,15 @@ async def update_personal_info(user_id: int, info_update: PersonalInformationUpd
 
 
 @router.delete("/{user_id}", status_code=204)
-async def delete_personal_info(user_id: int, db: AsyncSession = Depends(get_db)):
-    """Delete personal information for a user"""
+async def delete_personal_info(
+    user_id: int,
+    db: AsyncSession = Depends(get_db),
+    current_user_id: int = Depends(get_current_user)
+):
+    """Delete personal information for a user (requires JWT token)"""
+    if user_id != current_user_id:
+        raise HTTPException(status_code=403, detail="You can only delete your own information")
+    
     result = await db.execute(select(PersonalInformation).where(PersonalInformation.user_id == user_id))
     info = result.scalar_one_or_none()
     

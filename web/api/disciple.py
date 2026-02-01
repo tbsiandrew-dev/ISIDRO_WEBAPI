@@ -3,14 +3,23 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from ..database import get_db
+from ..dependencies import get_current_user
 from ..models import DiscipleInformation, DiscipleInformationCreate, DiscipleInformationUpdate, DiscipleInformationResponse
 
 router = APIRouter(prefix="/api/disciple-info", tags=["disciple-information"])
 
 
 @router.post("/{user_id}", response_model=DiscipleInformationResponse, status_code=201)
-async def create_disciple_info(user_id: int, info: DiscipleInformationCreate, db: AsyncSession = Depends(get_db)):
-    """Create disciple information for a user"""
+async def create_disciple_info(
+    user_id: int,
+    info: DiscipleInformationCreate,
+    db: AsyncSession = Depends(get_db),
+    current_user_id: int = Depends(get_current_user)
+):
+    """Create disciple information for a user (requires JWT token)"""
+    if user_id != current_user_id:
+        raise HTTPException(status_code=403, detail="You can only access your own information")
+    
     # Check if user exists
     from ..models import User
     result = await db.execute(select(User).where(User.id == user_id))
@@ -30,8 +39,15 @@ async def create_disciple_info(user_id: int, info: DiscipleInformationCreate, db
 
 
 @router.get("/{user_id}", response_model=DiscipleInformationResponse)
-async def get_disciple_info(user_id: int, db: AsyncSession = Depends(get_db)):
-    """Get disciple information for a user"""
+async def get_disciple_info(
+    user_id: int,
+    db: AsyncSession = Depends(get_db),
+    current_user_id: int = Depends(get_current_user)
+):
+    """Get disciple information for a user (requires JWT token)"""
+    if user_id != current_user_id:
+        raise HTTPException(status_code=403, detail="You can only access your own information")
+    
     result = await db.execute(select(DiscipleInformation).where(DiscipleInformation.user_id == user_id))
     info = result.scalar_one_or_none()
     
@@ -42,8 +58,16 @@ async def get_disciple_info(user_id: int, db: AsyncSession = Depends(get_db)):
 
 
 @router.put("/{user_id}", response_model=DiscipleInformationResponse)
-async def update_disciple_info(user_id: int, info_update: DiscipleInformationUpdate, db: AsyncSession = Depends(get_db)):
-    """Update disciple information for a user"""
+async def update_disciple_info(
+    user_id: int,
+    info_update: DiscipleInformationUpdate,
+    db: AsyncSession = Depends(get_db),
+    current_user_id: int = Depends(get_current_user)
+):
+    """Update disciple information for a user (requires JWT token)"""
+    if user_id != current_user_id:
+        raise HTTPException(status_code=403, detail="You can only update your own information")
+    
     result = await db.execute(select(DiscipleInformation).where(DiscipleInformation.user_id == user_id))
     info = result.scalar_one_or_none()
     
@@ -60,8 +84,15 @@ async def update_disciple_info(user_id: int, info_update: DiscipleInformationUpd
 
 
 @router.delete("/{user_id}", status_code=204)
-async def delete_disciple_info(user_id: int, db: AsyncSession = Depends(get_db)):
-    """Delete disciple information for a user"""
+async def delete_disciple_info(
+    user_id: int,
+    db: AsyncSession = Depends(get_db),
+    current_user_id: int = Depends(get_current_user)
+):
+    """Delete disciple information for a user (requires JWT token)"""
+    if user_id != current_user_id:
+        raise HTTPException(status_code=403, detail="You can only delete your own information")
+    
     result = await db.execute(select(DiscipleInformation).where(DiscipleInformation.user_id == user_id))
     info = result.scalar_one_or_none()
     

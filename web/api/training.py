@@ -4,14 +4,23 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from typing import List
 from ..database import get_db
+from ..dependencies import get_current_user
 from ..models import Training, TrainingCreate, TrainingUpdate, TrainingResponse
 
 router = APIRouter(prefix="/api/trainings", tags=["trainings"])
 
 
 @router.post("/{user_id}", response_model=TrainingResponse, status_code=201)
-async def create_training(user_id: int, training: TrainingCreate, db: AsyncSession = Depends(get_db)):
-    """Create a training for a user"""
+async def create_training(
+    user_id: int,
+    training: TrainingCreate,
+    db: AsyncSession = Depends(get_db),
+    current_user_id: int = Depends(get_current_user)
+):
+    """Create a training for a user (requires JWT token)"""
+    if user_id != current_user_id:
+        raise HTTPException(status_code=403, detail="You can only access your own information")
+    
     # Check if user exists
     from ..models import User
     result = await db.execute(select(User).where(User.id == user_id))
@@ -26,8 +35,17 @@ async def create_training(user_id: int, training: TrainingCreate, db: AsyncSessi
 
 
 @router.get("/{user_id}", response_model=List[TrainingResponse])
-async def get_user_trainings(user_id: int, skip: int = 0, limit: int = 100, db: AsyncSession = Depends(get_db)):
-    """Get all trainings for a user"""
+async def get_user_trainings(
+    user_id: int,
+    skip: int = 0,
+    limit: int = 100,
+    db: AsyncSession = Depends(get_db),
+    current_user_id: int = Depends(get_current_user)
+):
+    """Get all trainings for a user (requires JWT token)"""
+    if user_id != current_user_id:
+        raise HTTPException(status_code=403, detail="You can only access your own information")
+    
     result = await db.execute(
         select(Training).where(Training.user_id == user_id).offset(skip).limit(limit)
     )
@@ -36,8 +54,16 @@ async def get_user_trainings(user_id: int, skip: int = 0, limit: int = 100, db: 
 
 
 @router.get("/{user_id}/{training_id}", response_model=TrainingResponse)
-async def get_training(user_id: int, training_id: int, db: AsyncSession = Depends(get_db)):
-    """Get a specific training"""
+async def get_training(
+    user_id: int,
+    training_id: int,
+    db: AsyncSession = Depends(get_db),
+    current_user_id: int = Depends(get_current_user)
+):
+    """Get a specific training (requires JWT token)"""
+    if user_id != current_user_id:
+        raise HTTPException(status_code=403, detail="You can only access your own information")
+    
     result = await db.execute(
         select(Training).where(Training.id == training_id, Training.user_id == user_id)
     )
@@ -50,8 +76,17 @@ async def get_training(user_id: int, training_id: int, db: AsyncSession = Depend
 
 
 @router.put("/{user_id}/{training_id}", response_model=TrainingResponse)
-async def update_training(user_id: int, training_id: int, training_update: TrainingUpdate, db: AsyncSession = Depends(get_db)):
-    """Update a training"""
+async def update_training(
+    user_id: int,
+    training_id: int,
+    training_update: TrainingUpdate,
+    db: AsyncSession = Depends(get_db),
+    current_user_id: int = Depends(get_current_user)
+):
+    """Update a training (requires JWT token)"""
+    if user_id != current_user_id:
+        raise HTTPException(status_code=403, detail="You can only update your own information")
+    
     result = await db.execute(
         select(Training).where(Training.id == training_id, Training.user_id == user_id)
     )
@@ -70,8 +105,16 @@ async def update_training(user_id: int, training_id: int, training_update: Train
 
 
 @router.delete("/{user_id}/{training_id}", status_code=204)
-async def delete_training(user_id: int, training_id: int, db: AsyncSession = Depends(get_db)):
-    """Delete a training"""
+async def delete_training(
+    user_id: int,
+    training_id: int,
+    db: AsyncSession = Depends(get_db),
+    current_user_id: int = Depends(get_current_user)
+):
+    """Delete a training (requires JWT token)"""
+    if user_id != current_user_id:
+        raise HTTPException(status_code=403, detail="You can only delete your own information")
+    
     result = await db.execute(
         select(Training).where(Training.id == training_id, Training.user_id == user_id)
     )

@@ -4,14 +4,23 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from typing import List
 from ..database import get_db
+from ..dependencies import get_current_user
 from ..models import Devotion, DevotionCreate, DevotionUpdate, DevotionResponse
 
 router = APIRouter(prefix="/api/devotions", tags=["devotions"])
 
 
 @router.post("/{user_id}", response_model=DevotionResponse, status_code=201)
-async def create_devotion(user_id: int, devotion: DevotionCreate, db: AsyncSession = Depends(get_db)):
-    """Create a devotion for a user"""
+async def create_devotion(
+    user_id: int,
+    devotion: DevotionCreate,
+    db: AsyncSession = Depends(get_db),
+    current_user_id: int = Depends(get_current_user)
+):
+    """Create a devotion for a user (requires JWT token)"""
+    if user_id != current_user_id:
+        raise HTTPException(status_code=403, detail="You can only access your own information")
+    
     # Check if user exists
     from ..models import User
     result = await db.execute(select(User).where(User.id == user_id))
@@ -26,8 +35,17 @@ async def create_devotion(user_id: int, devotion: DevotionCreate, db: AsyncSessi
 
 
 @router.get("/{user_id}", response_model=List[DevotionResponse])
-async def get_user_devotions(user_id: int, skip: int = 0, limit: int = 100, db: AsyncSession = Depends(get_db)):
-    """Get all devotions for a user"""
+async def get_user_devotions(
+    user_id: int,
+    skip: int = 0,
+    limit: int = 100,
+    db: AsyncSession = Depends(get_db),
+    current_user_id: int = Depends(get_current_user)
+):
+    """Get all devotions for a user (requires JWT token)"""
+    if user_id != current_user_id:
+        raise HTTPException(status_code=403, detail="You can only access your own information")
+    
     result = await db.execute(
         select(Devotion).where(Devotion.user_id == user_id).offset(skip).limit(limit)
     )
@@ -36,8 +54,16 @@ async def get_user_devotions(user_id: int, skip: int = 0, limit: int = 100, db: 
 
 
 @router.get("/{user_id}/{devotion_id}", response_model=DevotionResponse)
-async def get_devotion(user_id: int, devotion_id: int, db: AsyncSession = Depends(get_db)):
-    """Get a specific devotion"""
+async def get_devotion(
+    user_id: int,
+    devotion_id: int,
+    db: AsyncSession = Depends(get_db),
+    current_user_id: int = Depends(get_current_user)
+):
+    """Get a specific devotion (requires JWT token)"""
+    if user_id != current_user_id:
+        raise HTTPException(status_code=403, detail="You can only access your own information")
+    
     result = await db.execute(
         select(Devotion).where(Devotion.id == devotion_id, Devotion.user_id == user_id)
     )
@@ -50,8 +76,17 @@ async def get_devotion(user_id: int, devotion_id: int, db: AsyncSession = Depend
 
 
 @router.put("/{user_id}/{devotion_id}", response_model=DevotionResponse)
-async def update_devotion(user_id: int, devotion_id: int, devotion_update: DevotionUpdate, db: AsyncSession = Depends(get_db)):
-    """Update a devotion"""
+async def update_devotion(
+    user_id: int,
+    devotion_id: int,
+    devotion_update: DevotionUpdate,
+    db: AsyncSession = Depends(get_db),
+    current_user_id: int = Depends(get_current_user)
+):
+    """Update a devotion (requires JWT token)"""
+    if user_id != current_user_id:
+        raise HTTPException(status_code=403, detail="You can only update your own information")
+    
     result = await db.execute(
         select(Devotion).where(Devotion.id == devotion_id, Devotion.user_id == user_id)
     )
@@ -70,8 +105,16 @@ async def update_devotion(user_id: int, devotion_id: int, devotion_update: Devot
 
 
 @router.delete("/{user_id}/{devotion_id}", status_code=204)
-async def delete_devotion(user_id: int, devotion_id: int, db: AsyncSession = Depends(get_db)):
-    """Delete a devotion"""
+async def delete_devotion(
+    user_id: int,
+    devotion_id: int,
+    db: AsyncSession = Depends(get_db),
+    current_user_id: int = Depends(get_current_user)
+):
+    """Delete a devotion (requires JWT token)"""
+    if user_id != current_user_id:
+        raise HTTPException(status_code=403, detail="You can only delete your own information")
+    
     result = await db.execute(
         select(Devotion).where(Devotion.id == devotion_id, Devotion.user_id == user_id)
     )
