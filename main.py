@@ -9,6 +9,10 @@ from web.api.personal_info import router as personal_info_router
 from web.api.disciple import router as disciple_router
 from web.api.devotion import router as devotion_router
 from web.api.training import router as training_router
+from web.api.attendance import router as attendance_router
+from web.api.ministry_activities import router as ministry_activities_router
+from web.api.outreach import router as outreach_router
+from web.api.training_category import router as training_category_router
 from fastapi.middleware.cors import CORSMiddleware
 
 # Lifespan context manager for startup/shutdown events
@@ -45,6 +49,10 @@ app.include_router(personal_info_router)
 app.include_router(disciple_router)
 app.include_router(devotion_router)
 app.include_router(training_router)
+app.include_router(attendance_router)
+app.include_router(ministry_activities_router)
+app.include_router(outreach_router)
+app.include_router(training_category_router)
 
 # Root endpoint
 @app.get("/")
@@ -103,3 +111,4 @@ if __name__ == "__main__":
     import os
     port = int(os.getenv("PORT", 10000))
     uvicorn.run("main:app", host="0.0.0.0", port=port, reload=False)
+    
